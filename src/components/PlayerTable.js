@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import Player from "./Player";
+import Pagination from "./Pagination";
 
 import {getMockPlayers} from "./MockDataService";
 
@@ -17,8 +18,7 @@ class PlayerTable extends Component {
 
     async componentDidMount() {
         let {players} = {...this.state};
-        const mockPlayers = getMockPlayers();
-        players = await mockPlayers;
+        players = await getMockPlayers();
         this.setState({players});
     }
 
@@ -45,7 +45,9 @@ class PlayerTable extends Component {
                                                                                      onChange={(key, value) => this.onChange(id, key, value)}/>);
         return (
             <div className="player-table">
-                {playerComps}
+                <Pagination items={playerComps} itemsPerPage={10}>
+
+                </Pagination>
             </div>
         );
     }
