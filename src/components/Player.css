@@ -1,0 +1,8 @@
+.player-card {
+    display: flex;
+    flex-direction: row;
+}
+
+.player-input {
+    flex: 1;
+}
