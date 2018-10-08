@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import Player from "./Player";
 
+import {getMockPlayers} from "./MockDataService";
+
 import './PlayerTable.css';
 
 class PlayerTable extends Component {
@@ -11,6 +13,13 @@ class PlayerTable extends Component {
                 {id: "1", name: "gamer", teamName: "gamerTeam", rating: 5, notes: ["Sucks", "Penis"]}
             ]
         }
+    }
+
+    async componentDidMount() {
+        let {players} = {...this.state};
+        const mockPlayers = getMockPlayers();
+        players = await mockPlayers;
+        this.setState({players});
     }
 
     onChange = (id, key, value) => {
