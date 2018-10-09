@@ -1,27 +1,45 @@
 import React, {Component} from "react";
-import PropTypes from "prop-types"
+import PropTypes from "prop-types";
 
 import "./Pagination.css"
-import { Button } from "@blueprintjs/core";
+import {Button} from "@blueprintjs/core";
 
 const PageLink = (props) => {
     const {onClick, disabled = false, pageNumber} = props;
-    return <Button minimal={true} 
-    disabled={disabled} onClick={onClick} >{pageNumber}</Button>
+    return (
+        <Button minimal={true}
+                disabled={disabled}
+                onClick={() => onClick(pageNumber)}>
+            {pageNumber}
+        </Button>)
 }
 
 const NAVIGATION = {};
 NAVIGATION.FWD = "forward";
-NAVIGATION.BKWD = "backward";
+NAVIGATION.BWD = "backward";
 
 const NavigationLink = (props) => {
-    const {onClick,disabled = false, navDirection} = props;
+    const {onClick, disabled = false, navDirection} = props;
     return (
         <Button
-         minimal={true}
-         disabled={disabled}
-         onClick={onClick} 
-        icon={navDirection === NAVIGATION.BKWD ? "arrow-left" : "arrow-right"} />
+            minimal={true}
+            disabled={disabled}
+            onClick={() => onClick(navDirection)}
+            icon={navDirection === NAVIGATION.BWD ? "arrow-left" : "arrow-right"}/>
+    )
+};
+
+const Page = (props) => {
+    let {items, itemsPerPage = 100, currentPage} = props;
+    let children = [];
+    const pageOffset = (currentPage - 1) * itemsPerPage;
+    for (let i = 0; i < itemsPerPage && ((pageOffset + i) < (items.length - 1)); i++) {
+        children.push(items[pageOffset + i]);
+    }
+    return (
+        <React.Fragment>
+            {children}
+        </React.Fragment>
     )
 }
 
@@ -31,32 +49,51 @@ export default class Pagination extends Component {
         this.state = {
             currentPage: 1
         }
+        this.maxPages = 1;
     }
 
-    createPages = () => {
-        return [
-            <NavigationLink navDirection={NAVIGATION.BKWD} disabled={this.state.currentPage === 0}/>,
-            (<PageLink pageNumber={1}/>),
-            (<PageLink pageNumber={2}/>),
-            (<PageLink pageNumber={3}/>),
-            (<PageLink pageNumber={4}/>),
-            (<PageLink pageNumber={5}/>),
-            (<PageLink pageNumber={6}/>),
-            <NavigationLink navDirection={NAVIGATION.FWD} disabled={false}/>
-        ]
-    }
+    _createPages = () => {
+        const {currentPage} = this.state;
+        const links = [];
+        links.push(<NavigationLink key={`page-nav-${NAVIGATION.BWD}`}
+                                   navDirection={NAVIGATION.BWD}
+                                   onClick={this.navigationLinkOnClick}
+                                   disabled={currentPage === 1}/>);
+
+        for (let i = 1; i < this.maxPages + 1; i++) {
+            links.push(<PageLink key={`page-link-${i}`} pageNumber={i} disabled={currentPage === i}
+                                 onClick={this.pageLinkOnClick}/>);
+        }
+        links.push(<NavigationLink key={`page-nav-${NAVIGATION.FWD}`}
+                                   navDirection={NAVIGATION.FWD}
+                                   onClick={this.navigationLinkOnClick}
+                                   disabled={currentPage === this.maxPages}/>);
+
+        return links;
+    };
+
+    navigationLinkOnClick = (navDirection) => {
+        if (navDirection === NAVIGATION.FWD) {
+            this.pageLinkOnClick(this.state.currentPage + 1);
+        } else if (navDirection === NAVIGATION.BWD) {
+            this.pageLinkOnClick(this.state.currentPage - 1);
+        }
+    };
+
+    pageLinkOnClick = (pageNumber) => {
+        if (!(pageNumber < 1 || pageNumber > this.maxPages)) {
+            this.setState({"currentPage": pageNumber});
+        }
+    };
 
     render() {
-        let {items, itemsPerPage} = this.props;
+        let {items, itemsPerPage = 100} = this.props;
         const {currentPage} = this.state;
-        let children = [];
-        for(let i = 0; i< 5 && i < items.length-1; i++) {
-            children.push(items[i]);
-        }
-        let pages = this.createPages();
+        this.maxPages = Math.ceil(items.length / itemsPerPage);
+        let pages = this._createPages();
         return (
             <React.Fragment>
-                {children}
+                <Page items={items} itemsPerPage={itemsPerPage} currentPage={currentPage}/>
                 <div className="pagination-pages">
                     {pages}
                 </div>
@@ -65,3 +102,7 @@ export default class Pagination extends Component {
     }
 }
 
+Pagination.propTypes = {
+    items: PropTypes.arrayOf(PropTypes.element).isRequired,
+    itemsPerPage: PropTypes.number
+};
